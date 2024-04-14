@@ -200,25 +200,26 @@ def check_submodules():
     """
     if os.path.exists(".gitmodules"):
         # Check if the submodules are empty
-        for root, dirs, files in os.walk("submodules"):
-            for d in dirs:
-                submodule_dir = os.path.join(root, d)
-                if not os.listdir(submodule_dir):
-                    print(
-                        f"The submodule directory {submodule_dir} is empty. Updating..."
-                    )
+        submodules_dir = "submodules"
+        if os.path.isdir(submodules_dir):
+            for d in os.listdir(submodules_dir):
+                submodule_path = os.path.join(submodules_dir, d)
+                if os.path.isdir(submodule_path):
+                    if not os.listdir(submodule_path):
+                        print(
+                            f"The submodule directory {submodule_path} is empty. Updating..."
+                        )
 
-                    subprocess.run(
-                        [
-                            "git",
-                            "submodule",
-                            "update",
-                            "--recursive",
-                            "--remote",
-                            submodule_dir,
-                        ],
-                        check=True,
-                    )
+                        subprocess.run(
+                            [
+                                "git",
+                                "submodule",
+                                "update",
+                                "--init",
+                                submodule_path,
+                            ],
+                            check=True,
+                        )
 
 
 def main():

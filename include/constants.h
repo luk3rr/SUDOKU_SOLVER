@@ -9,8 +9,10 @@
 
 #include <cstdint>
 
-constexpr uint8_t GRID_SIZE    = 9;
-constexpr uint8_t SUBGRID_SIZE = 3;
+#include "pair.h"
+
+constexpr uint16_t GRID_SIZE    = 9;
+constexpr uint16_t SUBGRID_SIZE = 3;
 
 enum class Algorithm : char
 {
@@ -20,5 +22,7 @@ enum class Algorithm : char
     A_STAR = 'A',
     GBFS   = 'G',
 };
+
+using State = Pair<Pair<uint16_t, uint16_t>, uint16_t>;
 
 #endif // CONSTANTS_H_

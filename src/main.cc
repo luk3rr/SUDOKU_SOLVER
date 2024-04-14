@@ -15,11 +15,17 @@
 
 int main(int argc, char* argv[])
 {
-    uint8_t grid[GRID_SIZE][GRID_SIZE];
+    uint16_t grid[GRID_SIZE][GRID_SIZE];
 
     if (argc != GRID_SIZE + 2)
     {
         std::cerr << "Uso: " << argv[0] << " <entrada>" << std::endl;
+
+        for (int i = 0; i < argc; i++)
+        {
+            std::cerr << "argv[" << i << "] = " << argv[i] << std::endl;
+        }
+
         return EXIT_FAILURE;
     }
 
@@ -33,8 +39,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    Solver solver(grid, static_cast<Algorithm>(algorithm));
-    solver.PrintGrid();
+    sudoku::Solver solver(grid, static_cast<Algorithm>(algorithm));
+    solver.Solve();
 
     return EXIT_SUCCESS;
 }

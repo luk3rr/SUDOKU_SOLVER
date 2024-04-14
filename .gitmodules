@@ -1,3 +1,9 @@
 [submodule "submodules/data_structures"]
 	path = submodules/data_structures
 	url = git@github.com:luk3rr/DATA_STRUCTURES.git
+[submodule "submodules/geometric_algorithms"]
+	path = submodules/geometric_algorithms
+	url = git@github.com:luk3rr/GEOMETRIC_ALGORITHMS.git
+[submodule "submodules/sorting_algorithms"]
+	path = submodules/sorting_algorithms
+	url = git@github.com:luk3rr/SORTING_ALGORITHMS.git

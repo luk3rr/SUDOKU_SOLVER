@@ -99,7 +99,7 @@ namespace sudoku
              * infinity
              * @return True if the puzzle was solved, false otherwise
              **/
-            bool IDDFS(std::size_t maxDepth = std::numeric_limits<std::size_t>::max());
+            bool IDDFS(std::size_t maxDepth = GRID_SIZE * GRID_SIZE);
 
             /**
              * @brief Solve the puzzle using the Uniform Cost Search algorithm

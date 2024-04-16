@@ -7,16 +7,18 @@
 #ifndef SOLVER_H_
 #define SOLVER_H_
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <pthread.h>
+#include <random>
 
 #include "constants.h"
 #include "graph.h"
 #include "graph_utils.h"
 #include "grid_utils.h"
-#include "heuristics.h"
 #include "priority_queue_bheap.h"
 #include "queue_slkd.h"
 #include "vector.h"

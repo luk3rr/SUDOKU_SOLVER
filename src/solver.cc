@@ -5,13 +5,6 @@
  */
 
 #include "solver.h"
-#include "constants.h"
-#include "vector.h"
-#include "vertex.h"
-#include <chrono>
-#include <cstdint>
-#include <cstdlib>
-#include <random>
 
 namespace sudoku
 {

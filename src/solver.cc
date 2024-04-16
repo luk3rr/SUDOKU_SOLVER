@@ -6,11 +6,12 @@
 
 #include "solver.h"
 #include "constants.h"
-#include "grid_utils.h"
 #include "vector.h"
 #include "vertex.h"
+#include <chrono>
 #include <cstdint>
-#include <iostream>
+#include <cstdlib>
+#include <random>
 
 namespace sudoku
 {
@@ -31,6 +32,84 @@ namespace sudoku
 
     Solver::~Solver() { }
 
+    void
+    Solver::GetVertexState(graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex,
+                           uint16_t grid[GRID_SIZE][GRID_SIZE])
+    {
+        grid::CopyGrid(this->m_startGrid, grid);
+
+        // Since each vertex stores a history of changes, it is possible to use
+        // these changes to reconstruct the new current grid
+        Vector<State> changes = vertex.GetData();
+
+        grid::ApplyChanges(grid, changes);
+    }
+
+    uint16_t Solver::GenRandomCost()
+    {
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::mt19937 generator(seed);
+
+        std::uniform_int_distribution<int> distribution(1, GRID_SIZE + 1);
+
+        return distribution(generator);
+    }
+
+    uint16_t Solver::CalculateAStarHeuristic(
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex)
+    {
+
+        uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
+
+        this->GetVertexState(vertex, currentGrid);
+
+        uint16_t possibleNumbers = 0;
+
+        Vector<State> changes = vertex.GetData();
+
+        if (not changes.IsEmpty())
+        {
+            uint16_t row, col;
+
+            row = changes.Back().GetFirst().GetFirst();
+            col = changes.Back().GetFirst().GetSecond();
+
+            for (uint16_t num = 1; num <= GRID_SIZE; num++)
+            {
+                if (grid::IsValid(currentGrid, row, col, num))
+                    possibleNumbers++;
+            }
+
+            return possibleNumbers;
+        }
+
+        // If the vertex has no changes, that is, it is the root vertex, the cost
+        // is GRID_SIZE
+        return GRID_SIZE;
+    }
+
+    uint16_t Solver::CalculateGreedyBFSHeuristic(
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex)
+    {
+
+        uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
+
+        this->GetVertexState(vertex, currentGrid);
+
+        uint16_t emptyCells = 0;
+
+        for (uint16_t row = 0; row < GRID_SIZE; row++)
+        {
+            for (uint16_t col = 0; col < GRID_SIZE; col++)
+            {
+                if (currentGrid[row][col] == 0)
+                    emptyCells++;
+            }
+        }
+
+        return emptyCells;
+    }
+
     void Solver::CreateInitialState()
     {
         // Make sure the graph is empty
@@ -46,13 +125,7 @@ namespace sudoku
     {
         uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
 
-        grid::CopyGrid(this->m_startGrid, currentGrid);
-
-        // Since each vertex stores a history of changes, it is possible to use
-        // these changes to reconstruct the new current grid
-        Vector<State> changes = vertex.GetData();
-
-        grid::ApplyChanges(currentGrid, changes);
+        this->GetVertexState(vertex, currentGrid);
 
         return grid::IsSolved(currentGrid);
     }
@@ -61,13 +134,8 @@ namespace sudoku
     {
         uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
 
-        grid::CopyGrid(this->m_startGrid, currentGrid);
-
-        // Since each vertex stores a history of changes, it is possible to use
-        // these changes to reconstruct the new current grid
+        this->GetVertexState(father, currentGrid);
         Vector<State> changes = father.GetData();
-
-        grid::ApplyChanges(currentGrid, changes);
 
         // Find the first empty cell to expand
         uint16_t row, col;
@@ -86,6 +154,8 @@ namespace sudoku
                     this->m_graph.GetNumVertices() + 1,
                     changes);
 
+                child.SetCurrentCost(this->GenRandomCost());
+
                 child.SetLabel(graph::VertexLabel::UNVISITED);
 
                 this->m_graph.AddVertex(child);
@@ -103,13 +173,7 @@ namespace sudoku
     {
         uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
 
-        grid::CopyGrid(this->m_startGrid, currentGrid);
-
-        // Since each vertex stores a history of changes, it is possible to use
-        // these changes to reconstruct the new current grid
-        Vector<State> changes = vertex.GetData();
-
-        grid::ApplyChanges(currentGrid, changes);
+        this->GetVertexState(vertex, currentGrid);
 
         if (pythonStyle)
         {
@@ -240,220 +304,194 @@ namespace sudoku
         return false;
     }
 
-    // bool UCS(std::size_t sourceID, std::size_t targetID)
-    //{
-    //     bheap::PriorityQueue<
-    //         graph::Vertex<uint16_t, uint16_t, Vector<State>, nDim>*,
-    //         decltype(graph::compare::Vertex<uint16_t, uint16_t, Vector<State>,
-    //         nDim>)> minPQueue;
+    bool Solver::UCS()
+    {
+        // Create the root vertex of the graph
+        this->CreateInitialState();
 
-    //    // Defines the infinity value for the uint16_t type
-    //    uint16_t INFINITY_VALUE = std::numeric_limits<uint16_t>::max();
+        bheap::PriorityQueue<
+            graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
+            decltype(graph::compare::Vertex<uint16_t, uint16_t, Vector<State>>)>
+            minPQueue;
 
-    //    // Set all vertices as not visited
-    //    for (std::size_t i = 0; i < this->m_graph.GetVertices().Size(); i++)
-    //    {
-    //        this->m_graph.GetVertices().At(i).SetLabel(graph::VertexLabel::UNVISITED);
-    //        this->m_graph.GetVertices().At(i).SetCurrentCost(INFINITY_VALUE);
-    //        this->m_graph.GetVertices().At(i).SetEdge2Predecessor(nullptr);
-    //    }
+        // Enqueue the root vertex
+        minPQueue.Enqueue(&this->m_graph.GetVertices().At(0));
 
-    //    this->m_graph.GetVertices().At(sourceID).SetCurrentCost(0);
+        // Auxiliar variables to make code most legible
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
-    //    minPQueue.Enqueue(&graph.GetVertices().At(sourceID));
+        graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-    //    // Auxiliar variables to make code most legible
-    //    graph::Vertex<uint16_t, uint16_t, Vector<State>, nDim>* u = nullptr;
-    //    graph::Vertex<uint16_t, uint16_t, Vector<State>, nDim>* v = nullptr;
+        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
 
-    //    graph::Edge<uint16_t, uint16_t, Vector<State>, nDim>* uv;
+        while (not minPQueue.IsEmpty())
+        {
+            u = minPQueue.Dequeue();
 
-    //    Vector<graph::Edge<uint16_t, uint16_t, Vector<State>, nDim>*> uAdjList;
+            u->SetLabel(graph::VertexLabel::VISITED);
 
-    //    while (not minPQueue.IsEmpty())
-    //    {
-    //        u = minPQueue.Dequeue();
+            this->ExpandNode(*u);
 
-    //        u->SetLabel(graph::VertexLabel::VISITED);
+            uAdjList = u->GetAdjacencyList();
 
-    //        if (u->GetID() == targetID)
-    //            break;
+            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            {
+                uv = uAdjList.At(i);
 
-    //        uAdjList = u->GetAdjacencyList();
+                // Get the pointer do neighbor vertex, since one end of the edge is
+                // vertex u, and the other end is vertex v
+                uv->GetVertices().GetFirst()->GetID() == u->GetID()
+                    ? v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
+                    : v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
 
-    //        for (std::size_t i = 0; i < uAdjList.Size(); i++)
-    //        {
-    //            uv = uAdjList.At(i);
+                if (this->CheckSolution(*v))
+                {
+                    this->m_vertexSolutionID = v->GetID();
+                    return true;
+                }
 
-    //            // Get the pointer do neighbor vertex, since one end of the edge is
-    //            // vertex u, and the other end is vertex v
-    //            uv->GetVertices().GetFirst()->GetID() == u->GetID()
-    //                ? v = &graph.GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-    //                : v = &graph.GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                if (v->GetLabel() == graph::VertexLabel::UNVISITED and
+                    Relax(u, v, uAdjList.At(i)))
+                {
+                    minPQueue.Enqueue(v);
+                }
+            }
+        }
+        return false;
+    }
 
-    //            if (v->GetLabel() == graph::VertexLabel::UNVISITED and
-    //                Relax(u, v, uAdjList.At(i)))
-    //            {
-    //                minPQueue.Enqueue(v);
-    //            }
-    //        }
-    //    }
-    //}
+    bool Solver::AStar()
+    {
+        bheap::PriorityQueue<
+            graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
+            decltype(graph::compare::Vertex<uint16_t, uint16_t, Vector<State>>)>
+            minPQueue;
 
-    // bool Solver::AStar(heuristics::distance::Heuristic heuristic)
-    //{
-    //     bheap::PriorityQueue<
-    //         graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
-    //         decltype(graph::compare::Vertex<uint16_t, uint16_t, Vector<State>>)>
-    //         minPQueue;
+        // Auxiliar variables to make code most legible
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
-    //    // Defines the infinity value for the uint16_t type
-    //    uint16_t INFINITY_VALUE = std::numeric_limits<uint16_t>::max();
+        graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-    //    // Set all vertices as not visited
-    //    for (std::size_t i = 0; i < this->m_graph.GetVertices().Size(); i++)
-    //    {
-    //        this->m_graph.GetVertices().At(i).SetLabel(graph::VertexLabel::UNVISITED);
-    //        this->m_graph.GetVertices().At(i).SetCurrentCost(INFINITY_VALUE);
-    //        this->m_graph.GetVertices().At(i).SetHeuristicCost(0);
-    //        this->m_graph.GetVertices().At(i).SetEdge2Predecessor(nullptr);
-    //    }
+        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
 
-    //    // Auxiliar variables to make code most legible
-    //    graph::Vertex<uint16_t, uint16_t, Vector<State>>* u =
-    //        &this->m_graph.GetVertices().At(sourceID);
-    //    graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
-    //    graph::Vertex<uint16_t, uint16_t, Vector<State>>* t =
-    //        &this->m_graph.GetVertices().At(targetID);
+        u = &this->m_graph.GetVertices().At(0);
 
-    //    graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
+        uint16_t heuristicCost = this->CalculateAStarHeuristic(*u);
 
-    //    Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
+        u->SetCurrentCost(heuristicCost);
+        u->SetHeuristicCost(heuristicCost);
 
-    //    this->m_graph.GetVertices().At(sourceID).SetCurrentCost(
-    //        CalculateHeuristic(heuristic, u, t));
-    //    this->m_graph.GetVertices().At(sourceID).SetHeuristicCost(
-    //        CalculateHeuristic(heuristic, u, t));
+        minPQueue.Enqueue(u);
 
-    //    minPQueue.Enqueue(&graph.GetVertices().At(sourceID));
+        while (not minPQueue.IsEmpty())
+        {
+            u = minPQueue.Dequeue();
 
-    //    while (not minPQueue.IsEmpty())
-    //    {
-    //        u = minPQueue.Dequeue();
+            u->SetLabel(graph::VertexLabel::VISITED);
 
-    //        u->SetLabel(graph::VertexLabel::VISITED);
+            this->ExpandNode(*u);
 
-    //        if (u->GetID() == targetID)
-    //        {
-    //            // PrintPath(graph, u);
-    //            break;
-    //        }
+            uAdjList = u->GetAdjacencyList();
 
-    //        uAdjList = u->GetAdjacencyList();
+            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            {
+                uv = uAdjList.At(i);
 
-    //        for (std::size_t i = 0; i < uAdjList.Size(); i++)
-    //        {
-    //            uv = uAdjList.At(i);
+                // Get the pointer do neighbor vertex, since one end of the edge
+                // vertex u, and the other end is vertex v
+                uv->GetVertices().GetFirst()->GetID() == u->GetID()
+                    ? v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
+                    : v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
 
-    //            // Get the pointer do neighbor vertex, since one end of the edge is
-    //            // vertex u, and the other end is vertex v
-    //            uv->GetVertices().GetFirst()->GetID() == u->GetID()
-    //                ? v = &graph.GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-    //                : v = &graph.GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                if (this->CheckSolution(*v))
+                {
+                    this->m_vertexSolutionID = v->GetID();
+                    return true;
+                }
 
-    //            if (v->GetLabel() == graph::VertexLabel::UNVISITED)
-    //            {
-    //                v->SetHeuristicCost(CalculateHeuristic(heuristic, v, t));
+                if (v->GetLabel() == graph::VertexLabel::UNVISITED)
+                {
+                    v->SetHeuristicCost(CalculateAStarHeuristic(*v));
 
-    //                if (Relax(u, v, uAdjList.At(i)))
-    //                {
-    //                    minPQueue.Enqueue(v);
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+                    if (Relax(u, v, uAdjList.At(i)))
+                    {
+                        minPQueue.Enqueue(v);
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
-    // bool Solver::GreedyBFS(heuristics::distance::Heuristic heuristic)
-    // {
-    //     bheap::PriorityQueue<
-    //         graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
-    //         decltype(graph::compare::VertexHeuristic<uint16_t, uint16_t,
-    //         Vector<State>>)> minPQueue;
+    bool Solver::GreedyBFS()
+    {
+        bheap::PriorityQueue<graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
+                             decltype(graph::compare::VertexHeuristic<uint16_t,
+                                                                      uint16_t,
+                                                                      Vector<State>>)>
+            minPQueue;
 
-    //     // Set all vertices as not visited
-    //     for (std::size_t i = 0; i < this->m_graph.GetVertices().Size(); i++)
-    //     {
-    //         this->m_graph.GetVertices().At(i).SetLabel(graph::VertexLabel::UNVISITED);
-    //         this->m_graph.GetVertices().At(i).SetHeuristicCost(0);
-    //         this->m_graph.GetVertices().At(i).SetEdge2Predecessor(nullptr);
-    //     }
+        // Auxiliar variables to make code most legible
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
+        graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
-    //     // Auxiliar variables to make code most legible
-    //     graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
-    //     graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
-    //     graph::Vertex<uint16_t, uint16_t, Vector<State>>* t = nullptr;
+        graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-    //     // Check if source and target vertices are valid
-    //     try
-    //     {
-    //         u = &this->m_graph.GetVertices().At(sourceID);
-    //         v = nullptr;
-    //         t = &this->m_graph.GetVertices().At(targetID);
-    //     }
-    //     catch (const std::out_of_range& e)
-    //     {
-    //         // sourceID or targetID are invalid, that is, they are not in the graph
-    //         return false;
-    //     }
+        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
 
-    //     graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
+        u = &this->m_graph.GetVertices().At(0);
 
-    //     Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
+        uint16_t heuristicCost = this->CalculateGreedyBFSHeuristic(*u);
+        u->SetHeuristicCost(heuristicCost);
 
-    //     this->m_graph.GetVertices().At(sourceID).SetHeuristicCost(
-    //         CalculateHeuristic(heuristic, u, t));
+        minPQueue.Enqueue(u);
 
-    //     minPQueue.Enqueue(&this->m_graph.GetVertices().At(sourceID));
+        while (not minPQueue.IsEmpty())
+        {
+            u = minPQueue.Dequeue();
 
-    //     while (not minPQueue.IsEmpty())
-    //     {
-    //         u = minPQueue.Dequeue();
+            u->SetLabel(graph::VertexLabel::VISITED);
 
-    //         u->SetLabel(graph::VertexLabel::VISITED);
+            this->ExpandNode(*u);
 
-    //         if (u->GetID() == targetID)
-    //         {
-    //             // PrintPath(graph, u);
-    //             return true;
-    //         }
+            uAdjList = u->GetAdjacencyList();
 
-    //         uAdjList = u->GetAdjacencyList();
+            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            {
+                uv = uAdjList.At(i);
 
-    //         for (std::size_t i = 0; i < uAdjList.Size(); i++)
-    //         {
-    //             uv = uAdjList.At(i);
+                // Get the pointer do neighbor vertex, since one end of the edge
+                // vertex u, and the other end is vertex v
+                uv->GetVertices().GetFirst()->GetID() == u->GetID()
+                    ? v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
+                    : v = &this->m_graph
+                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
 
-    //             // Get the pointer do neighbor vertex, since one end of the edge is
-    //             // vertex u, and the other end is vertex v
-    //             uv->GetVertices().GetFirst()->GetID() == u->GetID()
-    //                 ? v = &this->m_graph
-    //                            .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-    //                 : v = &this->m_graph
-    //                            .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                if (this->CheckSolution(*v))
+                {
+                    this->m_vertexSolutionID = v->GetID();
+                    return true;
+                }
 
-    //             if (v->GetLabel() == graph::VertexLabel::UNVISITED)
-    //             {
-    //                 v->SetHeuristicCost(CalculateHeuristic(heuristic, v, t));
-    //                 v->SetEdge2Predecessor(uv);
+                if (v->GetLabel() == graph::VertexLabel::UNVISITED)
+                {
+                    v->SetHeuristicCost(this->CalculateGreedyBFSHeuristic(*v));
 
-    //                 minPQueue.Enqueue(v);
-    //             }
-    //         }
-    //     }
+                    minPQueue.Enqueue(v);
+                }
+            }
+        }
 
-    //     return false;
-    // }
+        return false;
+    }
+
     void Solver::PrintAlgorithm()
     {
         std::cout << "Algorithm: ";
@@ -509,12 +547,15 @@ namespace sudoku
                     break;
 
                 case Algorithm::UCS:
+                    solved = this->UCS();
                     break;
 
                 case Algorithm::A_STAR:
+                    solved = this->AStar();
                     break;
 
                 case Algorithm::GBFS:
+                    solved = this->GreedyBFS();
                     break;
 
                 default:

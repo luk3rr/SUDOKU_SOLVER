@@ -24,7 +24,8 @@ namespace grid
      * @param col Column of the empty position
      * @return True if an empty position was found, false otherwise
      **/
-    bool FindEmptyCell(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t& row, uint16_t& col);
+    bool
+    FindEmptyCell(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t& row, uint16_t& col);
 
     /**
      * @brief Apply the changes to the grid
@@ -72,8 +73,10 @@ namespace grid
      * @param num Number to check
      * @return True if the number is valid in the position, false otherwise
      **/
-    bool
-    IsValid(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t row, uint16_t col, uint16_t num);
+    bool IsValid(uint16_t grid[GRID_SIZE][GRID_SIZE],
+                 uint16_t row,
+                 uint16_t col,
+                 uint16_t num);
 
     /**
      * @brief Copy the grid to a new grid

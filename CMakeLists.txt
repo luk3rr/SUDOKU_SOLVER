@@ -66,9 +66,9 @@ ADD_EXECUTABLE(program ${PROGRAM})
 ADD_EXECUTABLE(unit_test ${UNIT_TESTS})
 
 # Link libs
-TARGET_LINK_LIBRARIES(GeometricAlgorithms DataStructures)
 TARGET_LINK_LIBRARIES(SortingAlgorithms DataStructures)
+TARGET_LINK_LIBRARIES(GeometricAlgorithms SortingAlgorithms DataStructures)
 TARGET_LINK_LIBRARIES(GeometricAlgorithms SortingAlgorithms)
-TARGET_LINK_LIBRARIES(SudokuSolver GeometricAlgorithms)
-TARGET_LINK_LIBRARIES(SudokuSolver DataStructures)
-TARGET_LINK_LIBRARIES(unit_test SudokuSolver DataStructures GeometricAlgorithms)
+TARGET_LINK_LIBRARIES(SudokuSolver GeometricAlgorithms SortingAlgorithms DataStructures)
+TARGET_LINK_LIBRARIES(program SudokuSolver)
+TARGET_LINK_LIBRARIES(unit_test SudokuSolver)

@@ -34,8 +34,10 @@ namespace grid
         return false;
     }
 
-    bool
-    IsInBox(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t row, uint16_t col, uint16_t num)
+    bool IsInBox(uint16_t grid[GRID_SIZE][GRID_SIZE],
+                 uint16_t row,
+                 uint16_t col,
+                 uint16_t num)
     {
         uint16_t corner_row = row - row % SUBGRID_SIZE;
         uint16_t corner_col = col - col % SUBGRID_SIZE;
@@ -54,14 +56,17 @@ namespace grid
         return false;
     }
 
-    bool
-    IsValid(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t row, uint16_t col, uint16_t num)
+    bool IsValid(uint16_t grid[GRID_SIZE][GRID_SIZE],
+                 uint16_t row,
+                 uint16_t col,
+                 uint16_t num)
     {
         return not IsInRow(grid, row, num) and not IsInCol(grid, col, num) and
                not IsInBox(grid, row, col, num);
     }
 
-    bool FindEmptyCell(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t& row, uint16_t& col)
+    bool
+    FindEmptyCell(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t& row, uint16_t& col)
     {
         for (row = 0; row < GRID_SIZE; row++)
         {
@@ -80,7 +85,7 @@ namespace grid
     void ApplyChanges(uint16_t grid[GRID_SIZE][GRID_SIZE], Vector<State>& state)
     {
         Pair<uint16_t, uint16_t> position;
-        uint16_t                change;
+        uint16_t                 change;
 
         for (std::size_t i = 0; i < state.Size(); i++)
         {

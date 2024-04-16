@@ -7,22 +7,20 @@
 #ifndef SOLVER_H_
 #define SOLVER_H_
 
+#include <cstddef>
 #include <cstdint>
+#include <iostream>
+#include <pthread.h>
 
 #include "constants.h"
 #include "graph.h"
 #include "graph_utils.h"
 #include "grid_utils.h"
 #include "heuristics.h"
-#include "pair.h"
 #include "priority_queue_bheap.h"
 #include "queue_slkd.h"
 #include "vector.h"
 #include "vertex.h"
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
-#include <pthread.h>
 
 namespace sudoku
 {
@@ -45,6 +43,28 @@ namespace sudoku
                 m_graph; /**< Graph that
                   represents the
                   search tree */
+
+            /**
+             * @brief Get the state of the vertex
+             * @param vertex Vertex to get the state
+             * @param grid Grid to store the state of the vertex
+             */
+            void
+            GetVertexState(graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex,
+                           uint16_t grid[GRID_SIZE][GRID_SIZE]);
+
+            /**
+             * @brief Generate a random cost for the vertex
+             * The cost is random value between 1 and GRID_SIZE + 1
+             * @return Random cost
+             **/
+            uint16_t GenRandomCost();
+
+            uint16_t CalculateAStarHeuristic(
+                graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex);
+
+            uint16_t CalculateGreedyBFSHeuristic(
+                graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex);
 
             /**
              * @brief Create the initial state of the puzzle
@@ -109,18 +129,15 @@ namespace sudoku
 
             /**
              * @brief Solve the puzzle using the A* algorithm
-             * @param heuristic Heuristic to use in the A* algorithm
              * @return True if the puzzle was solved, false otherwise
              **/
-            bool AStar(heuristics::distance::Heuristic heuristic =
-                           heuristics::distance::Heuristic::EUCLIDEAN);
+            bool AStar();
 
             /**
              * @brief Solve the puzzle using the Greedy Best-First Search algorithm
              * @return True if the puzzle was solved, false otherwise
              **/
-            bool GreedyBFS(heuristics::distance::Heuristic heuristic =
-                               heuristics::distance::Heuristic::EUCLIDEAN);
+            bool GreedyBFS();
 
         public:
             /**

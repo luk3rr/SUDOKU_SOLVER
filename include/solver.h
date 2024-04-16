@@ -62,9 +62,27 @@ namespace sudoku
              **/
             uint16_t GenRandomCost();
 
+            /**
+             * @brief Calculate the heuristic of the vertex for the A* algorithm
+             *
+             * The heuristic is the amount of possible values in the cell modified by
+             * the vertex state
+             *
+             * @param vertex Vertex to calculate the heuristic
+             * @return Heuristic of the vertex
+             */
             uint16_t CalculateAStarHeuristic(
                 graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex);
 
+            /**
+             * @brief Calculate the heuristic of the vertex for the Greedy Best-First
+             * Search algorithm
+             *
+             * The heuristic is the amount of empty cells in the grid
+             *
+             * @param vertex Vertex to calculate the heuristic
+             * @return Heuristic of the vertex
+             */
             uint16_t CalculateGreedyBFSHeuristic(
                 graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex);
 

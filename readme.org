@@ -1,6 +1,6 @@
 * SUDOKU_SOLVER
 SUDOKU_SOLVER é um programa que tem como objetivo encontrar uma solução para um quebra-cabeça de [[https://en.wikipedia.org/wiki/Sudoku][Sudoku]] representado por uma matriz 9x9, caso uma solução exista.
-Esse programa é o produto de uma atividade prática da disciplina de Introdução à Inteligência Artificial do [[https://dcc.ufmg.br/][Departamento de Ciência da Computação da UFMG]].
+Esse programa é o produto de um trabalho prático da disciplina de Introdução à Inteligência Artificial do [[https://dcc.ufmg.br/][Departamento de Ciência da Computação da UFMG]].
 
 ** Sumário
 - [[#Compilação][Compilação]]
@@ -9,31 +9,29 @@ Esse programa é o produto de uma atividade prática da disciplina de Introduç�
 - [[#Documentação][Documentação]]
 
 * Compilação
-SUDOKU_SOLVER pode ser compilado com o seguinte comando:
+O script =run= é responsável por gerenciar a compilação com o [[https://en.wikipedia.org/wiki/CMake][CMake]] e a execução do programa. Ele oferece várias opções para facilitar diferentes operações relacionadas ao projeto. A tabela abaixo apresenta essas opções:
+
+| Parâmetro do script =run=       | Descrição                                                                                         |
+|---------------------------------+---------------------------------------------------------------------------------------------------|
+| =-h, --help=                    | Exibe uma mensagem de ajuda                                                                       |
+| =-b, --build=                   | Executa a compilação                                                                              |
+| =-d, --debug=                   | Compila o projeto em modo de depuração (debug mode)                                               |
+| =-e, --exec=                    | Executa o programa                                                                                |
+| =-c, --clean=                   | Limpa os artefatos gerados pelo CMake, como os diretórios de compilação e os binários             |
+| =-t, --test=                    | Executa os testes unitários                                                                       |
+| =-v, --valgrind=                | Executa testes com Valgrind para verificar vazamentos e o uso de memória                          |
+| =-x <args>, --exec_args <args>= | Permite passar argumentos adicionais para o programa. Pode ser utilizado com as flags =-e= e =-v= |
+
+Assim, SUDOKU_SOLVER pode ser compilado com o seguinte comando:
 
 #+begin_src sh
 $ ./run --build
+# ou
+$ ./run -b
 #+end_src
 
 * Execução
-O script =run= é responsável por gerenciar a compilação com [[https://en.wikipedia.org/wiki/CMake][CMake]] e a execução do programa SUDOKU_SOLVER. Ele oferece várias opções para facilitar diferentes operações relacionadas ao projeto. A tabela abaixo apresenta essas opções:
-
-| Parâmetro do script =run=     | Descrição                                                                              |
-|-------------------------------+----------------------------------------------------------------------------------------|
-| -h, --help                    | Exibe uma mensagem de ajuda com a lista de opções disponíveis e suas descrições        |
-| -b, --build                   | Executa a compilação utilizando o CMake                                                |
-| -d, --debug                   | Compila o projeto em modo de depuração (debug mode)                                    |
-| -e, --exec                    | Executa o programa SUDOKU_SOLVER após a compilação                                     |
-| -c, --clean                   | Limpa os artefatos gerados pelo CMake, como os diretórios de compilação e os binários  |
-| -t, --test                    | Executa os testes unitários definidos para o projeto                                   |
-| -v, --valgrind                | Executa testes com Valgrind para verificar vazamentos de memória e uso de memória      |
-| -x <args>, --exec_args <args> | Permite passar argumentos adicionais para o programa SUDOKU_SOLVER quando executado    |
-
-Exemplos de uso:
-#+begin_src sh
-$ ./run -b # Compila o programa
-#+end_src
-
+A execução do programa pode ser feita com o comando:
 #+begin_src sh
 $ ./run -e -x <program params> # Executa o programa com a passagem de parâmetros
 #+end_src
@@ -43,7 +41,9 @@ Também é possível executar o binário do programa diretamente, por exemplo:
 $ bin/Release/program <program params>
 #+end_src
 
-SUDOKU_SOLVER espera a passagem 10 parâmetros, uma letra maiúscula que define qual algoritmo de [[https://en.wikipedia.org/wiki/State_space_search][busca em espaços de estado]] será empregado para encontrar a solução e a matriz inicial do Sudoku. A matriz é dada 9 conjuntos de 9 números, onde o primeiro conjunto é a primeira linha da matriz, o segundo é a segunda linha etc.
+SUDOKU_SOLVER espera a passagem 10 parâmetros:
++ uma letra maiúscula que define qual algoritmo de [[https://en.wikipedia.org/wiki/State_space_search][busca em espaços de estado]] será empregado para encontrar a solução
++ a matriz inicial do Sudoku.
 
 A tabela abaixo apresenta todos os algoritmos de busca implementados.
 
@@ -55,11 +55,15 @@ A tabela abaixo apresenta todos os algoritmos de busca implementados.
 | =A <matrix>= | Busca uma solução com o algoritmo A* Search                              |
 | =G <matrix>= | Busca uma solução com o algoritmo Greedy Best-First Search               |
 
+A matriz é dada por 9 conjuntos de 9 números, onde o primeiro conjunto é a primeira linha da matriz, o segundo é a segunda linha etc.
+
 Exemplo de execução:
 #+begin_src sh
-              # linha 1  linha 2   linha 3   linha 4   linha 5   linha 6   linha 7   linha 8   linha 9
-./run -e -x U 800000000 003600000 070090200 050007000 000045700 000100030 001000068 008500010 090000400
+                # linha 1  linha 2   linha 3   linha 4   linha 5   linha 6   linha 7   linha 8   linha 9
+$ ./run -e -x U 800000000 003600000 070090200 050007000 000045700 000100030 001000068 008500010 090000400
 #+end_src
+
+Zero representa as posições que precisam ser preenchidas.
 
 O comando acima passa a seguinte matriz para o programa:
 #+begin_src txt
@@ -76,7 +80,7 @@ O comando acima passa a seguinte matriz para o programa:
 0 9 0 | 0 0 0 | 4 0 0
 #+end_src
 
-Saída para a matriz proposta. =Total expanded states= é a quantidade de estados explorados.
+Saída esperada do programa para a matriz de entrada:
 #+begin_src txt
 8 1 2 | 7 5 3 | 6 4 9
 9 4 3 | 6 8 2 | 1 7 5
@@ -92,5 +96,9 @@ Saída para a matriz proposta. =Total expanded states= é a quantidade de estado
 
 Total expanded states: 1813316
 #+end_src
+
+=Total expanded states= é a quantidade de [[https://en.wikipedia.org/wiki/State_space_(computer_science)][estados]] explorados.
+* Benchmarks
++ TODO
 * Documentação
-TODO...
+A primeira versão da documentação, bem como o enunciado deste trabalho pode ser lida [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs][aqui]].

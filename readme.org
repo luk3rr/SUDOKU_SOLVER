@@ -41,7 +41,7 @@ Também é possível executar o binário do programa diretamente, por exemplo:
 $ bin/Release/program <program params>
 #+end_src
 
-SUDOKU_SOLVER espera a passagem 10 parâmetros:
+SUDOKU_SOLVER espera a passagem dos seguintes parâmetros:
 + uma letra maiúscula que define qual algoritmo de [[https://en.wikipedia.org/wiki/State_space_search][busca em espaços de estado]] será empregado para encontrar a solução
 + a matriz inicial do Sudoku.
 

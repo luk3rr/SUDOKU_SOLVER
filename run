@@ -110,7 +110,6 @@ def cmake_build(debug=False):
 
     os.chdir(current_dir)
 
-
 def cmake_exec(program_args=None):
     """
     @brief

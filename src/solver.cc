@@ -5,6 +5,8 @@
  */
 
 #include "solver.h"
+#include "constants.h"
+#include "vector.h"
 
 namespace sudoku
 {
@@ -40,7 +42,7 @@ namespace sudoku
 
     uint16_t Solver::GenRandomCost()
     {
-        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        unsigned     seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::mt19937 generator(seed);
 
         std::uniform_int_distribution<int> distribution(1, GRID_SIZE + 1);
@@ -109,9 +111,8 @@ namespace sudoku
         this->m_graph.Destroy();
 
         // Create the root vertex
-        graph::Vertex<uint16_t, uint16_t, Vector<State>> root(0, Vector<State>());
-        root.SetLabel(graph::VertexLabel::UNVISITED);
-        this->m_graph.AddVertex(root);
+        this->m_graph.AddVertex(Vector<State>())
+            .SetLabel(graph::VertexLabel::UNVISITED);
     }
 
     bool Solver::CheckSolution(graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex)
@@ -143,15 +144,12 @@ namespace sudoku
                 changes.PushBack(State(Pair<uint16_t, uint16_t>(row, col), num));
 
                 // Create a new vertex and add it to the graph
-                graph::Vertex<uint16_t, uint16_t, Vector<State>> child(
-                    this->m_graph.GetNumVertices() + 1,
-                    changes);
+                graph::Vertex<uint16_t, uint16_t, Vector<State>>& child =
+                    this->m_graph.AddVertex(changes);
 
                 child.SetCurrentCost(this->GenRandomCost());
 
                 child.SetLabel(graph::VertexLabel::UNVISITED);
-
-                this->m_graph.AddVertex(child);
 
                 this->m_graph.AddEdge(father.GetID(), child.GetID());
 
@@ -184,15 +182,13 @@ namespace sudoku
 
         slkd::Queue<graph::Vertex<uint16_t, uint16_t, Vector<State>>*> queue;
 
-        queue.Enqueue(&this->m_graph.GetVertices().At(0));
+        queue.Enqueue(&this->m_graph.GetVertex(0));
 
         // Auxiliar variables to make code most legible
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
         graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
-
-        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
 
         while (not queue.IsEmpty())
         {
@@ -201,19 +197,19 @@ namespace sudoku
             // Expand the node, that is, generate all possible and valid children
             this->ExpandNode(*u);
 
-            uAdjList = u->GetAdjacencyList();
-
-            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            // Pair<first, second> = <ID, Edge>
+            for (auto& pair : u->GetAdjacencyList())
             {
-                uv = uAdjList.At(i);
+                // Edge uv (or vu, if is non-directed uv = vu)
+                uv = pair.GetSecond();
 
                 // Get the pointer do neighbor vertex, since one end of the edge is
                 // vertex u, and the other end is vertex v
                 uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                    ? v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-                    : v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                    ? v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetSecond()->GetID())
+                    : v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetFirst()->GetID());
 
                 // Check if the solution was found
                 if (this->CheckSolution(*v))
@@ -225,6 +221,10 @@ namespace sudoku
                 if (v->GetLabel() == graph::VertexLabel::UNVISITED)
                     queue.Enqueue(v);
             }
+
+            // After expanding a vertex, since we won't visit it again, we remove the
+            // node from the graph to save memory
+            this->m_graph.RemoveVertex(u->GetID());
         }
 
         return false;
@@ -237,7 +237,7 @@ namespace sudoku
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
-        u = &this->m_graph.GetVertices().At(currentVertexID);
+        u = &this->m_graph.GetVertex(currentVertexID);
 
         if (this->CheckSolution(*u))
             return true;
@@ -252,21 +252,17 @@ namespace sudoku
         // Expand the node, that is, generate all possible and valid children
         this->ExpandNode(*u);
 
-        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList =
-            u->GetAdjacencyList();
-
-        for (std::size_t i = 0; i < uAdjList.Size(); i++)
+        // Pair<first, second> = <ID, Edge>
+        for (auto& pair : u->GetAdjacencyList())
         {
             // Edge uv (or vu, if is non-directed)
-            uv = uAdjList.At(i);
+            uv = pair.GetSecond();
 
             // Get the pointer do neighbor vertex, since one end of the edge is
             // vertex u, and the other end is vertex v
             uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                ? v = &this->m_graph
-                           .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-                : v = &this->m_graph
-                           .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                ? v = &this->m_graph.GetVertex(uv->GetVertices().GetSecond()->GetID())
+                : v = &this->m_graph.GetVertex(uv->GetVertices().GetFirst()->GetID());
 
             // Check if the solution was found
             if (this->CheckSolution(*v))
@@ -281,6 +277,7 @@ namespace sudoku
                     return true;
             }
         }
+
         return false;
     }
 
@@ -308,15 +305,13 @@ namespace sudoku
             minPQueue;
 
         // Enqueue the root vertex
-        minPQueue.Enqueue(&this->m_graph.GetVertices().At(0));
+        minPQueue.Enqueue(&this->m_graph.GetVertex(0));
 
         // Auxiliar variables to make code most legible
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
         graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
-
-        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
 
         while (not minPQueue.IsEmpty())
         {
@@ -326,19 +321,19 @@ namespace sudoku
 
             this->ExpandNode(*u);
 
-            uAdjList = u->GetAdjacencyList();
-
-            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            // Pair<first, second> = <ID, Edge>
+            for (auto& pair : u->GetAdjacencyList())
             {
-                uv = uAdjList.At(i);
+                // Edge uv (or vu, if is non-directed uv = vu)
+                uv = pair.GetSecond();
 
                 // Get the pointer do neighbor vertex, since one end of the edge is
                 // vertex u, and the other end is vertex v
                 uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                    ? v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-                    : v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                    ? v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetSecond()->GetID())
+                    : v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetFirst()->GetID());
 
                 if (this->CheckSolution(*v))
                 {
@@ -346,12 +341,15 @@ namespace sudoku
                     return true;
                 }
 
-                if (v->GetLabel() == graph::VertexLabel::UNVISITED and
-                    Relax(u, v, uAdjList.At(i)))
+                if (v->GetLabel() == graph::VertexLabel::UNVISITED and Relax(u, v, uv))
                 {
                     minPQueue.Enqueue(v);
                 }
             }
+
+            // After expanding a vertex, since we won't visit it again, we remove the
+            // node from the graph to save memory
+            this->m_graph.RemoveVertex(u->GetID());
         }
         return false;
     }
@@ -369,9 +367,7 @@ namespace sudoku
 
         graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
-
-        u = &this->m_graph.GetVertices().At(0);
+        u = &this->m_graph.GetVertex(0);
 
         uint16_t heuristicCost = this->CalculateAStarHeuristic(*u);
 
@@ -388,19 +384,19 @@ namespace sudoku
 
             this->ExpandNode(*u);
 
-            uAdjList = u->GetAdjacencyList();
-
-            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            // Pair<first, second> = <ID, Edge>
+            for (auto& pair : u->GetAdjacencyList())
             {
-                uv = uAdjList.At(i);
+                // Edge uv (or vu, if is non-directed uv = vu)
+                uv = pair.GetSecond();
 
                 // Get the pointer do neighbor vertex, since one end of the edge
                 // vertex u, and the other end is vertex v
                 uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                    ? v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-                    : v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                    ? v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetSecond()->GetID())
+                    : v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetFirst()->GetID());
 
                 if (this->CheckSolution(*v))
                 {
@@ -410,14 +406,18 @@ namespace sudoku
 
                 if (v->GetLabel() == graph::VertexLabel::UNVISITED)
                 {
-                    v->SetHeuristicCost(CalculateAStarHeuristic(*v));
+                    v->SetHeuristicCost(this->CalculateAStarHeuristic(*v));
 
-                    if (Relax(u, v, uAdjList.At(i)))
+                    if (Relax(u, v, uv))
                     {
                         minPQueue.Enqueue(v);
                     }
                 }
             }
+
+            // After expanding a vertex, since we won't visit it again, we remove the
+            // node from the graph to save memory
+            this->m_graph.RemoveVertex(u->GetID());
         }
         return false;
     }
@@ -436,9 +436,7 @@ namespace sudoku
 
         graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-        Vector<graph::Edge<uint16_t, uint16_t, Vector<State>>*> uAdjList;
-
-        u = &this->m_graph.GetVertices().At(0);
+        u = &this->m_graph.GetVertex(0);
 
         uint16_t heuristicCost = this->CalculateGreedyBFSHeuristic(*u);
         u->SetHeuristicCost(heuristicCost);
@@ -453,19 +451,19 @@ namespace sudoku
 
             this->ExpandNode(*u);
 
-            uAdjList = u->GetAdjacencyList();
-
-            for (std::size_t i = 0; i < uAdjList.Size(); i++)
+            // Pair<first, second> = <ID, Edge>
+            for (auto& pair : u->GetAdjacencyList())
             {
-                uv = uAdjList.At(i);
+                // Edge uv (or vu, if is non-directed uv = vu)
+                uv = pair.GetSecond();
 
                 // Get the pointer do neighbor vertex, since one end of the edge
                 // vertex u, and the other end is vertex v
                 uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                    ? v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetSecond()->GetID()]
-                    : v = &this->m_graph
-                               .GetVertices()[uv->GetVertices().GetFirst()->GetID()];
+                    ? v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetSecond()->GetID())
+                    : v = &this->m_graph.GetVertex(
+                          uv->GetVertices().GetFirst()->GetID());
 
                 if (this->CheckSolution(*v))
                 {
@@ -480,6 +478,10 @@ namespace sudoku
                     minPQueue.Enqueue(v);
                 }
             }
+
+            // After expanding a vertex, since we won't visit it again, we remove the
+            // node from the graph to save memory
+            this->m_graph.RemoveVertex(u->GetID());
         }
 
         return false;

@@ -5,8 +5,6 @@
  */
 
 #include "solver.h"
-#include "constants.h"
-#include "vector.h"
 
 namespace sudoku
 {
@@ -278,6 +276,10 @@ namespace sudoku
             }
         }
 
+        // After expanding a vertex, since we won't visit it again, we remove the
+        // node from the graph to save memory
+        this->m_graph.RemoveVertex(u->GetID());
+
         return false;
     }
 
@@ -356,6 +358,9 @@ namespace sudoku
 
     bool Solver::AStar()
     {
+        // Create the root vertex of the graph
+        this->CreateInitialState();
+
         bheap::PriorityQueue<
             graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
             decltype(graph::compare::Vertex<uint16_t, uint16_t, Vector<State>>)>
@@ -424,6 +429,9 @@ namespace sudoku
 
     bool Solver::GreedyBFS()
     {
+        // Create the root vertex of the graph
+        this->CreateInitialState();
+
         bheap::PriorityQueue<graph::Vertex<uint16_t, uint16_t, Vector<State>>*,
                              decltype(graph::compare::VertexHeuristic<uint16_t,
                                                                       uint16_t,

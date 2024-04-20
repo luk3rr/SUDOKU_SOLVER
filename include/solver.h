@@ -21,6 +21,7 @@
 #include "grid_utils.h"
 #include "priority_queue_bheap.h"
 #include "queue_slkd.h"
+#include "stack_slkd.h"
 #include "vector.h"
 #include "vertex.h"
 
@@ -120,17 +121,6 @@ namespace sudoku
              * @return True if the puzzle was solved, false otherwise
              **/
             bool BFS();
-
-            /**
-             * @brief Auxiliary function to solve the puzzle using Iterative Deepening
-             * Depth-First Search algorithm
-             * @param currentVertexID ID of the current vertex
-             * @param depth Depth of the search
-             * @param label Label of the current vertex
-             * @param True if the puzzle was solved, false otherwise
-             **/
-            bool
-            IDDFS(std::size_t currentVertexID, std::size_t depth, std::size_t label);
 
             /**
              * @brief Solve the puzzle using the Iterative Deepening Depth-First Search

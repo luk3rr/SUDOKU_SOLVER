@@ -5,6 +5,13 @@
  */
 
 #include "solver.h"
+#include "constants.h"
+#include "graph_utils.h"
+#include "stack_slkd.h"
+#include "vector.h"
+#include "vertex.h"
+#include <cstddef>
+#include <cstdint>
 
 namespace sudoku
 {
@@ -228,71 +235,72 @@ namespace sudoku
         return false;
     }
 
-    bool
-    Solver::IDDFS(std::size_t currentVertexID, std::size_t depth, std::size_t label)
+    bool Solver::IDDFS(std::size_t maxDepth)
     {
         // Auxiliar variables to make code most legible
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* u = nullptr;
         graph::Vertex<uint16_t, uint16_t, Vector<State>>* v = nullptr;
 
-        u = &this->m_graph.GetVertex(currentVertexID);
-
-        if (this->CheckSolution(*u))
-            return true;
-
-        if (depth <= 0)
-            return false;
-
-        u->SetLabel(label);
-
         graph::Edge<uint16_t, uint16_t, Vector<State>>* uv;
 
-        // Expand the node, that is, generate all possible and valid children
-        this->ExpandNode(*u);
-
-        // Pair<first, second> = <ID, Edge>
-        for (auto& pair : u->GetAdjacencyList())
-        {
-            // Edge uv (or vu, if is non-directed)
-            uv = pair.GetSecond();
-
-            // Get the pointer do neighbor vertex, since one end of the edge is
-            // vertex u, and the other end is vertex v
-            uv->GetVertices().GetFirst()->GetID() == u->GetID()
-                ? v = &this->m_graph.GetVertex(uv->GetVertices().GetSecond()->GetID())
-                : v = &this->m_graph.GetVertex(uv->GetVertices().GetFirst()->GetID());
-
-            // Check if the solution was found
-            if (this->CheckSolution(*v))
-            {
-                this->m_vertexSolutionID = v->GetID();
-                return true;
-            }
-
-            if (v->GetLabel() != label)
-            {
-                if (IDDFS(v->GetID(), --depth, label))
-                    return true;
-            }
-        }
-
-        // After expanding a vertex, since we won't visit it again, we remove the
-        // node from the graph to save memory
-        this->m_graph.RemoveVertex(u->GetID());
-
-        return false;
-    }
-
-    bool Solver::IDDFS(std::size_t maxDepth)
-    {
-        for (std::size_t i = 0; i < maxDepth; i++)
+        for (std::size_t depth = 1; depth <= maxDepth; depth++)
         {
             this->CreateInitialState();
 
-            if (IDDFS(0, i, i))
-                return true;
-        }
+            slkd::Stack<graph::Vertex<uint16_t, uint16_t, Vector<State>>*> stack;
 
+            // The cost of a vertex is the depth in which it was visited (depth of the
+            // search)
+            this->m_graph.GetVertex(0).SetCurrentCost(0);
+            this->m_graph.GetVertex(0).SetLabel(graph::VISITED);
+
+            stack.Push(&this->m_graph.GetVertex(0));
+
+            while (not stack.IsEmpty())
+            {
+                u = stack.Pop();
+
+                // If the cost of the vertex is greater than the depth, we don't need to
+                // expand it
+                if (u->GetCurrentCost() > depth)
+                    continue;
+
+                this->ExpandNode(*u);
+
+                // Pair<first, second> = <ID, Edge>
+                for (auto& pair : u->GetAdjacencyList())
+                {
+                    // Edge uv (or vu, if is non-directed uv = vu)
+                    uv = pair.GetSecond();
+
+                    // Get the pointer do neighbor vertex, since one end of the edge is
+                    // vertex u, and the other end is vertex v
+                    uv->GetVertices().GetFirst()->GetID() == u->GetID()
+                        ? v = &this->m_graph.GetVertex(
+                              uv->GetVertices().GetSecond()->GetID())
+                        : v = &this->m_graph.GetVertex(
+                              uv->GetVertices().GetFirst()->GetID());
+
+                    if (this->CheckSolution(*v))
+                    {
+                        this->m_vertexSolutionID = v->GetID();
+                        return true;
+                    }
+
+                    // If the vertex has not been visited yet, we add it to the stack
+                    // with the cost of the current vertex + 1
+                    if (v->GetLabel() == graph::VertexLabel::UNVISITED)
+                    {
+                        v->SetLabel(u->GetCurrentCost() + 1);
+                        stack.Push(v);
+                    }
+                }
+
+                // After expanding a vertex, since we won't visit it again, we remove
+                // the node from the graph to save memory
+                this->m_graph.RemoveVertex(u->GetID());
+            }
+        }
         return false;
     }
 

@@ -5,7 +5,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 
 # Set default parameters
-PROJECT(CppSkeleton)
+PROJECT(SudokuSolver)
 
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,10 +13,10 @@ SET(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set compiler flags for different build types
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(EXECUTABLE_NAME "program_debug")
+    SET(EXECUTABLE_NAME "sudoku_debug")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wextra -pedantic")
 ELSE()
-    SET(EXECUTABLE_NAME "program")
+    SET(EXECUTABLE_NAME "sudoku_solver")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -pedantic")
 ENDIF()
 
@@ -62,7 +62,7 @@ INCLUDE_DIRECTORIES(${INC_DIR}/lib)
 ADD_LIBRARY(SudokuSolver ${PROGRAM})
 
 # Make executables
-ADD_EXECUTABLE(program ${PROGRAM})
+ADD_EXECUTABLE(sudoku_solver ${PROGRAM})
 ADD_EXECUTABLE(unit_test ${UNIT_TESTS})
 
 # Link libs
@@ -70,5 +70,5 @@ TARGET_LINK_LIBRARIES(SortingAlgorithms DataStructures)
 TARGET_LINK_LIBRARIES(GeometricAlgorithms SortingAlgorithms DataStructures)
 TARGET_LINK_LIBRARIES(GeometricAlgorithms SortingAlgorithms)
 TARGET_LINK_LIBRARIES(SudokuSolver GeometricAlgorithms SortingAlgorithms DataStructures)
-TARGET_LINK_LIBRARIES(program SudokuSolver)
+TARGET_LINK_LIBRARIES(sudoku_solver SudokuSolver)
 TARGET_LINK_LIBRARIES(unit_test SudokuSolver)

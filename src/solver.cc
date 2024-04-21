@@ -5,13 +5,6 @@
  */
 
 #include "solver.h"
-#include "constants.h"
-#include "graph_utils.h"
-#include "stack_slkd.h"
-#include "vector.h"
-#include "vertex.h"
-#include <cstddef>
-#include <cstdint>
 
 namespace sudoku
 {
@@ -261,7 +254,7 @@ namespace sudoku
                 u = stack.Pop();
 
                 // If the cost of the vertex is greater than the depth, we don't need to
-                // expand it
+                // expand it (since we are doing a depth-limited search)
                 if (u->GetCurrentCost() > depth)
                     continue;
 
@@ -533,6 +526,13 @@ namespace sudoku
 
     void Solver::Solve()
     {
+        if(not grid::GridIsValid(this->m_startGrid))
+        {
+            std::cout << "Invalid grid t(-_-t)" << std::endl;
+            grid::PrintGrid(this->m_startGrid);
+            return;
+        }
+
         std::cout << "Solving the following grid:" << std::endl;
         grid::PrintGrid(this->m_startGrid);
         std::cout << std::endl;
@@ -576,17 +576,17 @@ namespace sudoku
 
         if (solved)
         {
+            std::cout << "Solution found :')\n" << std::endl;
             this->PrintState(this->m_graph.GetVertices().At(this->m_vertexSolutionID));
             std::cout << "Total expanded states: " << this->m_expandedStates
                       << std::endl;
         }
         else
         {
-            std::cout << "No solution found" << std::endl;
+            std::cout << "No solution found :(\n" << std::endl;
 
             std::cout << "Total expanded states: " << this->m_expandedStates
                       << std::endl;
         }
     }
-
 } // namespace sudoku

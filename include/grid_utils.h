@@ -18,6 +18,13 @@
 namespace grid
 {
     /**
+     * @brief Check if the grid is valid
+     * @param grid Grid to check
+     * @return True if the grid is valid, false otherwise
+     **/
+    bool GridIsValid(uint16_t grid[GRID_SIZE][GRID_SIZE]);
+
+    /**
      * @brief Find an empty position in the grid
      * @param grid Grid to find the empty position
      * @param row Row of the empty position

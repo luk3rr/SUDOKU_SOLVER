@@ -8,6 +8,46 @@
 
 namespace grid
 {
+    bool GridIsValid(uint16_t grid[GRID_SIZE][GRID_SIZE])
+    {
+        for (std::size_t i = 0; i < GRID_SIZE; i++)
+        {
+            for (std::size_t j = 0; j < GRID_SIZE; j++)
+            {
+                if (grid[i][j] != 0)
+                {
+                    // Case 1: The number is not in the range [1, GRID_SIZE]
+                    if (grid[i][j] > GRID_SIZE)
+                    {
+                        std::cerr << "Invalid number at position (" << i << ", " << j
+                                  << ") = " << grid[i][j] << std::endl;
+
+                        return false;
+                    }
+
+                    // Case 2: The number already exists in the row, column or subgrid
+                    // Save the number and set the cell to 0 to check if the grid is
+                    // valid
+                    uint16_t num = grid[i][j];
+                    grid[i][j]   = 0;
+
+                    if (not IsValid(grid, i, j, num))
+                    {
+                        std::cerr << "Invalid number at position (" << i << ", " << j
+                                  << ") = " << num << std::endl;
+
+                        grid[i][j] = num;
+
+                        return false;
+                    }
+                    grid[i][j] = num;
+                }
+            }
+        }
+
+        return true;
+    }
+
     bool IsInRow(uint16_t grid[GRID_SIZE][GRID_SIZE], uint16_t row, uint16_t num)
     {
         for (std::size_t col = 0; col < GRID_SIZE; col++)

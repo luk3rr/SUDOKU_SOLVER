@@ -1,5 +1,15 @@
 #!/usr/bin/env sh
 
+# Filename: generate_input_cases.sh
+# Created on: May  2, 2024
+# Author: Lucas Araújo <araujolucas@dcc.ufmg.br>
+#
+# Description:
+#   Generate and grade test cases for the Sudoku Solver
+#   This script executes the 'generator.py' script to generate test cases
+#
+# Usage: ./generate_and_grade.sh <start> <end>
+
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <start> <end>"
     exit 1
@@ -45,10 +55,10 @@ function case_exists () {
 # Generate test cases
 function generate () {
     for ((i = start; i <= end; i++)); do
-        printf -v padded "%03d" $i  # Format the number with two digits
+        printf -v padded "%03d" $i  # Format the number with three digits
         echo "Generating case ${padded}..."
 
-        if case_exists "." "easy" "medium" "hard"; then
+        if case_exists "." "super_easy" "easy" "medium" "hard" "super_hard"; then
             echo "Case ${padded} already exists. Skipping..."
             continue
         fi

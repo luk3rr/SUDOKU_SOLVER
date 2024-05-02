@@ -526,7 +526,7 @@ namespace sudoku
 
     void Solver::Solve()
     {
-        if(not grid::GridIsValid(this->m_startGrid))
+        if (not grid::GridIsValid(this->m_startGrid))
         {
             std::cout << "Invalid grid t(-_-t)" << std::endl;
             grid::PrintGrid(this->m_startGrid);
@@ -538,6 +538,9 @@ namespace sudoku
         std::cout << std::endl;
 
         bool solved = false;
+
+        // Get total time in milliseconds
+        auto start = std::chrono::high_resolution_clock::now();
 
         // Check if the grid is already solved
         if (grid::IsSolved(this->m_startGrid))
@@ -574,19 +577,26 @@ namespace sudoku
             }
         }
 
+        auto end = std::chrono::high_resolution_clock::now();
+
         if (solved)
         {
             std::cout << "Solution found :')\n" << std::endl;
+
             this->PrintState(this->m_graph.GetVertices().At(this->m_vertexSolutionID));
-            std::cout << "Total expanded states: " << this->m_expandedStates
-                      << std::endl;
         }
         else
         {
             std::cout << "No solution found :(\n" << std::endl;
-
-            std::cout << "Total expanded states: " << this->m_expandedStates
-                      << std::endl;
         }
+
+        // Show algorithm used
+        this->PrintAlgorithm();
+
+        std::cout << "Total time: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                         .count()
+                  << " ms" << std::endl;
+        std::cout << "Total expanded states: " << this->m_expandedStates << std::endl;
     }
 } // namespace sudoku

@@ -157,7 +157,7 @@ fillGrid(grid)
 
 # A higher number of attempts will end up removing more numbers from the grid
 # Potentially resulting in more difficiult grids to solve!
-attempts = 20
+attempts = 40
 counter = 1
 
 while attempts > 0:

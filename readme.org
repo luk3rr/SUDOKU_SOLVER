@@ -38,7 +38,7 @@ $ ./run -e -x <program params> # Executa o programa com a passagem de parâmetro
 
 Também é possível executar o binário do programa diretamente, por exemplo:
 #+begin_src sh
-$ bin/Release/program <program params>
+$ bin/Release/sudoku_solver <program params>
 #+end_src
 
 SUDOKU_SOLVER espera a passagem dos seguintes parâmetros:
@@ -99,6 +99,6 @@ Total expanded states: 1813316
 
 =Total expanded states= é a quantidade de [[https://en.wikipedia.org/wiki/State_space_(computer_science)][estados]] explorados.
 * Benchmarks
-+ TODO
+A discussão dos resultados obtidos durante os teste podem ser lidos na seção 4 da [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs/documentacao.pdf][documentação]].
 * Documentação
-A primeira versão da documentação, bem como o enunciado deste trabalho pode ser lida [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs][aqui]].
+A primeira versão da documentação, bem como o enunciado deste trabalho pode ser lida [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs][aqui]]

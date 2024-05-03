@@ -46,6 +46,9 @@ def plot_avg_comparison(folder, algorithms, data, comparison_type):
     # Compute the average of the data
     avg_times = [sum([entry[0] for entry in times]) / len(times) for times in data]
 
+    # Sort the data
+    algorithms, avg_times = zip(*sorted(zip(algorithms, avg_times)))
+
     # Show the sample size
     bars = plt.bar(algorithms, avg_times, label=f"Sample size: {len(data[0][0])})")
 

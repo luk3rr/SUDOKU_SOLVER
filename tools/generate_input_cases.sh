@@ -30,7 +30,7 @@ cd "$(dirname "$0")"
 
 # Grade based on the number of expanded nodes (hard, medium, easy)
 super_hard=500000 # >= 500000 is super hard
-hard=100000 # >= 100000 and < 1000000 is hard
+hard=100000 # >= 100000 and < 500000 is hard
 medium=25000 # >= 25000 and < 100000 is medium
 easy=1000 # >= 1000 and < 25000 is easy
 super_easy=1000 # < 1000 is super easy

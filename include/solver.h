@@ -111,10 +111,10 @@ namespace sudoku
             /**
              * @brief Print the state of the vertex
              * @param vertex Vertex to print the state
-             * @param pythonStyle If true, print the state in a Python style
+             * @param style Style of the print
              **/
             void PrintState(graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex,
-                            bool pythonStyle = false);
+                            char style = 'd');
 
             /**
              * @brief Solve the puzzle using the Breadth-First Search algorithm

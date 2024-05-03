@@ -158,19 +158,25 @@ namespace sudoku
     }
 
     void Solver::PrintState(graph::Vertex<uint16_t, uint16_t, Vector<State>>& vertex,
-                            bool pythonStyle)
+                            char                                              style)
     {
         uint16_t currentGrid[GRID_SIZE][GRID_SIZE];
 
         this->GetVertexState(vertex, currentGrid);
 
-        if (pythonStyle)
+        switch (style)
         {
-            grid::PrintGridPythonStyle(currentGrid);
-        }
-        else
-        {
-            grid::PrintGrid(currentGrid);
+            case 'p':
+                grid::PrintGridPythonStyle(currentGrid);
+                break;
+
+            case 'l':
+                grid::PrintGridLineStyle(currentGrid);
+                break;
+
+            default:
+                grid::PrintGrid(currentGrid);
+                break;
         }
     }
 
@@ -533,10 +539,6 @@ namespace sudoku
             return;
         }
 
-        std::cout << "Solving the following grid:" << std::endl;
-        grid::PrintGrid(this->m_startGrid);
-        std::cout << std::endl;
-
         bool solved = false;
 
         // Get total time in milliseconds
@@ -579,24 +581,19 @@ namespace sudoku
 
         auto end = std::chrono::high_resolution_clock::now();
 
+        std::cout << this->m_expandedStates << " "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                         .count()
+                  << std::endl;
+
         if (solved)
         {
-            std::cout << "Solution found :')\n" << std::endl;
-
-            this->PrintState(this->m_graph.GetVertices().At(this->m_vertexSolutionID));
+            this->PrintState(this->m_graph.GetVertices().At(this->m_vertexSolutionID),
+                             'l');
         }
         else
         {
             std::cout << "No solution found :(\n" << std::endl;
         }
-
-        // Show algorithm used
-        this->PrintAlgorithm();
-
-        std::cout << "Total time: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                         .count()
-                  << " ms" << std::endl;
-        std::cout << "Total expanded states: " << this->m_expandedStates << std::endl;
     }
 } // namespace sudoku

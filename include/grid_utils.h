@@ -98,8 +98,8 @@ namespace grid
      * @param grid Grid to print
      **/
     void PrintGrid(uint16_t grid[GRID_SIZE][GRID_SIZE]);
-
     void PrintGridPythonStyle(uint16_t grid[GRID_SIZE][GRID_SIZE]);
+    void PrintGridLineStyle(uint16_t grid[GRID_SIZE][GRID_SIZE]);
 
     /**
      * @brief Print the subgrid

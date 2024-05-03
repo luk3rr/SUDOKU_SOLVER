@@ -196,6 +196,20 @@ namespace grid
         std::cout << ".]]" << std::endl;
     }
 
+    void PrintGridLineStyle(uint16_t grid[GRID_SIZE][GRID_SIZE])
+    {
+        // Print the grid
+        for (std::size_t i = 0; i < GRID_SIZE; i++)
+        {
+            for (std::size_t j = 0; j < GRID_SIZE; j++)
+            {
+                std::cout << (int)grid[i][j];
+            }
+            std::cout << " ";
+        }
+        std::cout << std::endl;
+    }
+
     bool IsSolved(uint16_t grid[GRID_SIZE][GRID_SIZE])
     {
         for (std::size_t i = 0; i < GRID_SIZE; i++)

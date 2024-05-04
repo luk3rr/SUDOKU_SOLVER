@@ -30,6 +30,8 @@ $ ./run --build
 $ ./run -b
 #+end_src
 
+OBS.: O programa foi desenvolvido utilizando o g++ =13.2.1=. Gentileza compilá-lo com essa versão do compilador.
+
 * Execução
 A execução do programa pode ser feita com o comando:
 #+begin_src sh
@@ -82,6 +84,8 @@ O comando acima passa a seguinte matriz para o programa:
 
 Saída esperada do programa para a matriz de entrada:
 #+begin_src txt
+1813316 11797
+812753649 943682175 675491283 154237896 369845721 287169534 521974368 438526917 796318452
 #+end_src
 
 * Benchmarks

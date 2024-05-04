@@ -8,6 +8,7 @@
 #define GRID_UTILS_H_
 
 #include <cstdint>
+#include <iostream>
 
 #include "constants.h"
 #include "vector.h"

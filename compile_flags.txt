@@ -4,7 +4,3 @@ include
 -I
 include/lib
 --std=c++20
--I
-submodules/data_structures/include
--I
-submodules/geometric_algorithms/include

@@ -11,6 +11,7 @@
 
 #include "constants.h"
 #include "vector.h"
+#include <iostream>
 
 /**
  * @brief Namespace containing utility functions for the grid

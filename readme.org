@@ -103,6 +103,6 @@ Total expanded states: 1813316
 
 =Total expanded states= é a quantidade de [[https://en.wikipedia.org/wiki/State_space_(computer_science)][estados]] explorados.
 * Benchmarks
-A discussão dos resultados obtidos durante os teste podem ser lidos na seção 4 da [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs/documentacao.pdf][documentação]].
+A discussão dos resultados obtidos durante os testes podem ser lidos na seção 4 da [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs/documentacao.pdf][documentação]].
 * Documentação
 A primeira versão da documentação, bem como o enunciado deste trabalho pode ser lida [[https://github.com/luk3rr/SUDOKU_SOLVER/tree/main/docs][aqui]]
